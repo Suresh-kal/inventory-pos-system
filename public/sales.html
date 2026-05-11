@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales History</title>
+    <br><br>
+    <button onclick="goBack()">Dashboard</button>
+<button onclick="logout()">Logout</button>
+<hr>
+</head>
+<body>
+    <h2>Sales History</h2>
+    <h3>Total Revenue: ₹<span id="totalRevenue">0</span></h3>
+<table border="1">
+    <thead>
+        <tr>
+<th>Product</th>
+<th>Category</th>
+<th>Quantity</th>
+<th>Total</th>
+<th>Date</th>
+        </tr>
+    </thead>
+    <tbody id="salesBody">
+
+    </tbody>
+
+</table>
+<script>
+    const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+
+if (!token) {
+    window.location.href = "/login.html";
+}
+
+const authHeaders = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+};
+
+    fetch("/sales",{
+        headers: authHeaders
+    })
+    .then(res=> res.json())
+    .then(sales=>{
+        let totalRevenue=0;
+        sales.forEach((s, index) => {
+            console.log("sale ", index+1);
+    totalRevenue += s.total;
+            const tr=document.createElement('tr');
+            tr.innerHTML = `
+<td colspan="5"><b>Sale #${index+1} | ${new Date(s.createdAt).toLocaleDateString()}</b></td>
+
+`;
+    document.getElementById("salesBody").appendChild(tr);
+    if(s.items && s.items.length > 0){
+
+        s.items.forEach(i => {
+            
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+<td>${i.productName}</td>
+<td>${i.category}</td>
+<td>${i.quantity}</td>
+<td>${i.subtotal}</td>
+<td>${new Date(s.createdAt).toLocaleDateString()}</td>
+`;
+
+            document.getElementById("salesBody").appendChild(tr);
+
+        });
+
+    }
+
+    
+    else {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+<td>${s.product ? s.product.model : s.productName}</td>
+<td>${s.product ? s.product.category : (s.category || "-")}</td>
+<td>${s.quantity}</td>
+<td>${s.total}</td>
+<td>${new Date(s.createdAt).toLocaleDateString()}</td>
+`;
+
+        document.getElementById("salesBody").appendChild(tr);
+    }
+const subtotal = document.createElement("tr");
+ subtotal.innerHTML = `
+<td colspan="4"><b>Total: ₹${s.total}</b></td>
+
+`;
+const gap = document.createElement("tr");
+
+gap.innerHTML = `
+<td colspan="5" style="height:10px;"></td>
+`;
+
+
+
+document.getElementById("salesBody").appendChild(subtotal);
+document.getElementById("salesBody").appendChild(gap);
+});
+const totalRow = document.createElement("tr");
+
+document.getElementById("totalRevenue").innerText = totalRevenue;
+    });
+
+    function goBack() {
+    window.location.href = "/dashboard.html";
+}
+
+function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("cart");
+
+    window.location.href = "/login.html";
+}
+</script>
+</body>
+</html>

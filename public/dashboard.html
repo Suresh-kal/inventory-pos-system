@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <h2>Inventory Dashboard</h2>
+    <h2 id="welcomeText"></h2>
+    <button onclick="logout()">Logout</button>
+    
+    <button id="salesBtn" onclick="openSalesPage()">Sales History</button>
+
+<hr>
+    <div id="revenueOnly">
+        <h3>Today's Revenue: ₹<span id="revenue">0</span></h3>
+        <h3>Items Sold: <span id="items">0</span></h3>
+        <h3>Transactions: <span id="transactions">0</span></h3>
+        <h3>Top Product Today: <span id="topProduct">...</span></h3>
+        <h3>Products Sold Today</h3>
+        <hr>
+        <canvas id="salesChart" width="200" height="100"></canvas>
+        <h3>Monthly Revenue</h3>
+        <hr>
+        <canvas id="monthlyChart" width="200" height="100"></canvas>
+    </div>
+   
+    <br><br>
+    <h3>⚠️ Low Stock Products</h3>
+    <ul id="lowStockList"></ul>
+    <hr>
+    <br><br>
+    <h3>🛒 Cart</h3>
+    <ul id="cartList"></ul>
+    <h4>Total: ₹<span id="cartTotal">0</span></h4>
+    <button onclick="checkout()">Checkout</button>
+    <hr>
+  <div id="addProductSection">
+    <h3>Add Product</h3>
+
+    <input id="model" placeholder="Model">
+    <input id="price" placeholder="Price" type="number">
+    <input id="stock" placeholder="Stock" type="number">
+    <input id="category" placeholder="Category">
+    <button onclick="addProduct()">Add🗃️</button>
+
+    <h3>Bulk Add Products</h3>
+
+    <div id="bulkContainer"></div>
+
+    <button onclick="addRow()">Add Row</button>
+    <button onclick="addAllProducts()">Add All</button>
+    </div>
+<br>
+<hr>
+<div id="staffDetails">
+<button onclick="toggleStaffForm()">▼ Register Staff</button>
+
+<div id="staffForm" style="display: none; margin-top: 10px;">
+    <input id="staffName" placeholder="Staff Name">
+    <input id="staffEmail" placeholder="Staff Email">
+    <input id="staffPassword" type="password" placeholder="Password">
+
+    <button onclick="registerStaff()">Create Staff</button>
+    
+</div>
+<button onclick="toggleStaffList()">▼ Show Staff</button>
+
+<div id="staffListContainer" style="display: none; margin-top: 10px;">
+    <ul id="staffList"></ul>
+</div>
+
+<h3>📊 Staff Performance</h3>
+<button onclick="togglePerformance()">▼ Show Performance</button>
+
+<div id="staffPerfContainer" style="display: none; margin-top:10px;">
+    <table border="1" id="staffPerfTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Total Sales</th>
+                <th>Total Revenue</th>
+            </tr>
+        </thead>
+        <tbody id="staffPerfBody"></tbody>
+    </table>
+</div>
+</div>
+    
+    <br><br>
+    <input id="search" placeholder="Search product..." oninput="filterProducts()">
+    <table border="1">
+        <thead>
+            <tr>
+                <th>model</th>
+                <th>category</th>
+                <th>price</th>
+                <th>Stock</th>
+                <th>Added</th>
+                <th>Update</th>
+                <th>Delete</th>
+                <th>sell</th>
+            </tr>
+        </thead>
+        <tbody id="body">
+
+        </tbody>
+    </table>
+    <script>
+        const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+window.onload = function () {
+    showWelcome();
+    if (role !=="owner") {
+        document.getElementById("salesBtn").style.display = "none";
+
+        document.getElementById("revenueOnly").style.display = "none";
+        
+        document.getElementById("staffDetails").style.display="none";
+    }
+};
+
+if (!token) {
+    window.location.href = "/login.html";
+}
+
+const authHeaders = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+};
+fetch("/me", {
+    headers: authHeaders
+})
+.then(res => res.json())
+.then(user => {
+
+    // owner always sees add product
+    if (user.role === "owner") {
+        return;
+    }
+
+    // staff without permission
+    if (!user.permissions?.canAddProduct) {
+        document.getElementById("addProductSection").style.display = "none";
+    }
+});
+
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        fetch("/low-stock",{
+            headers: authHeaders
+        })
+            .then(res => res.json())
+            .then(products => {
+                const list = document.getElementById("lowStockList");
+                if (products.length === 0) {
+                    const li = document.createElement("li");
+                    li.innerText = "✅ All products well stocked";
+                    list.appendChild(li);
+                    return;
+                }
+                products.forEach(p => {
+                    const li = document.createElement("li");
+                    li.innerText = `${p.model} (${p.stock} left)`;
+
+                    list.appendChild(li);
+                })
+            });
+        fetch("/summary",{
+            headers: authHeaders
+        })
+            .then(res => res.json())
+            .then(data => {
+
+
+                document.getElementById("revenue").innerText = data.todayRevenue;
+                document.getElementById("items").innerText = data.itemsSold;
+                document.getElementById("transactions").innerText = data.transactions;
+                document.getElementById("topProduct").innerText = data.topProduct;
+
+
+                const labels = Object.keys(data.productCount);
+                const values = Object.values(data.productCount);
+
+                const ctx = document.getElementById("salesChart");
+
+                new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Products Sold Today",
+                            data: values,
+                            backgroundColor: [
+                                "#4CAF50",
+                                "#2196F3",
+                                "#FF9800",
+                                "#9C27B0",
+                                "#F44336"
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+            });
+
+        fetch("/monthly-revenue",{
+            headers: authHeaders
+        })
+            .then(res => res.json())
+            .then(data => {
+                const labels = Object.keys(data);
+                const values = Object.values(data);
+
+                const ctx = document.getElementById("monthlyChart");
+
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Revenue This Month",
+                            data: values,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                })
+            })
+
+        let allProducts = [];
+        fetch("/products",{
+            headers: authHeaders
+        })
+            .then(res => res.json())
+            .then(products => {
+                allProducts = products;
+                products.forEach(p => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                <td>${p.model}</td>
+                <td>${p.category || "-"}</td>
+                <td>${p.price}</td>
+                <td>
+    ${p.stock == 0 ? "OUT OF STOCK" : (p.stock <= 5 ? "⚠️ " + p.stock : p.stock)}
+</td>
+                <td>${new Date(p.createdAt).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    })}</td>
+               <td><button onclick="updateStock('${p._id}')">Update</button></td>
+               <td><button onclick="deleteProduct('${p._id}')">Delete</button></td>
+               <td><button onclick="sellProduct('${p._id}')">Sell</button></td>
+               <td><button onclick="addToCart('${p._id}')">ADD TO CART</button></td>
+                `;
+                    document.getElementById("body").appendChild(tr);
+                });
+                cart = cart.filter(item => 
+        allProducts.some(p => p._id === item.productId)
+    );
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+                renderCart();
+            })
+        function updateStock(id) {
+            const val = prompt("Enter new stock:");
+            if (val === null || val === "") return;
+            fetch("/products/" + id, {
+                method: "PUT",
+                headers: authHeaders,
+                body: JSON.stringify({ stock: val })
+            })
+                .then(() => location.reload());
+        }
+
+        function addToCart(id) {
+            const existing = cart.find(item => item.productId === id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ productId: id, quantity: 1 });
+            }
+            
+            localStorage.setItem("cart", JSON.stringify(cart));
+            renderCart();
+        }
+       function renderCart(){
+
+    const list = document.getElementById("cartList");
+    list.innerHTML = "";
+
+    let total = 0;
+
+cart.forEach(item => {
+    const product = allProducts.find(p => p._id === item.productId);
+
+    if (!product) return;
+
+    const subtotal = product.price * item.quantity;
+
+});
+
+    cart.forEach(item => {
+
+        const product = allProducts.find(p => p._id === item.productId);
+
+        const subtotal = product.price * item.quantity;
+        total += subtotal;
+
+        const li = document.createElement("li");
+
+        li.innerHTML = `
+        ${product.model}
+        <button onclick="decreaseQty('${item.productId}')">-</button>
+        ${item.quantity}
+        <button onclick="increaseQty('${item.productId}')">+</button>
+
+        → ₹${subtotal}
+
+        <button onclick="removeItem('${item.productId}')">Remove</button>
+        `;
+
+        list.appendChild(li);
+
+    });
+
+    document.getElementById("cartTotal").innerText = total;
+}
+function increaseQty(id){
+    const item=cart.find(i=>i.productId===id);
+    if(item){ 
+    item.quantity+=1;
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+}
+function decreaseQty(id){
+    const item = cart.find(i => i.productId === id);
+
+    if(item){
+        item.quantity -= 1;
+
+        if(item.quantity <= 0){
+            removeItem(id);
+            return;
+        }
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+}
+function removeItem(id){
+    cart = cart.filter(item => item.productId !== id);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+}
+
+        function addProduct() {
+    const model = document.getElementById("model").value;
+    const price = document.getElementById("price").value;
+    const stock = document.getElementById("stock").value;
+    const category = document.getElementById("category").value;
+
+    fetch("/add-product", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ model, price, stock, category })
+    })
+   .then(res => {
+    return res.text().then(msg => {
+        if(!res.ok){
+            throw new Error(msg);
+        }
+        return msg;
+    });
+})
+.then(msg => {
+    alert(msg);
+    location.reload();
+})
+.catch(err => {
+    alert(err.message); // clean message
+});
+}
+
+
+        function addRow(){
+
+    const container = document.getElementById("bulkContainer");
+
+    const row = document.createElement("div");
+
+    row.innerHTML = `
+        <input placeholder="Model">
+        <input type="number" placeholder="Price">
+        <input type="number" placeholder="Stock">
+        <input placeholder="Category">
+    `;
+
+    container.appendChild(row);
+}
+
+function addAllProducts(){
+
+    const rows = document.getElementById("bulkContainer").children;
+
+    let products = [];
+
+    for(let row of rows){
+
+        const inputs = row.querySelectorAll("input");
+
+        const model = inputs[0].value;
+        const price = inputs[1].value;
+        const stock = inputs[2].value;
+        const category = inputs[3].value;
+
+        if(!model || !price || !stock || !category) continue;
+
+        products.push({ model, price, stock, category });
+    }
+
+    // 🔥 send to backend
+    fetch("/add-products", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(products)
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        let message = `${data.added} added`;
+
+        if(data.duplicates.length > 0){
+            message += `\nDuplicates:\n- ` + data.duplicates.join("\n- ");
+        }
+
+        alert(message);
+
+        location.reload();
+    })
+    .catch(err => {
+        alert("Error: " + err.message);
+    });
+}
+        function deleteProduct(id) {
+            if (!confirm("Are you sure you want to delete this product?")) return;
+            fetch("/products/" + id, {
+                method: "DELETE",
+                headers: authHeaders
+            })
+                .then(() => location.reload());
+        }
+        function filterProducts() {
+            const text = document.getElementById("search").value.toLowerCase();
+            const filtered = allProducts.filter(p =>
+                p.model.toLowerCase().includes(text)
+            );
+            const tbody = document.getElementById("body");
+            tbody.innerHTML = "";
+            filtered.forEach(p => {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+<td>${p.model}</td>
+<td>${p.category || "-"}</td>
+<td>${p.price}</td>
+<td>
+${p.stock == 0 ? "OUT OF STOCK" : (p.stock <= 5 ? "⚠️ " + p.stock : p.stock)}
+</td>
+<td>${new Date(p.createdAt).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                })}</td>
+<td><button onclick="updateStock('${p._id}')">Update</button></td>
+<td><button onclick="deleteProduct('${p._id}')">Delete</button></td>
+<td><button onclick="sellProduct('${p._id}')">Sell</button></td>
+`;
+
+
+                tbody.appendChild(tr);
+            });
+
+        }
+
+        function sellProduct(id) {
+            const quantity = prompt("Enter quantity sold:");
+
+            if (quantity === null || quantity === "") return;
+
+            fetch("/sell", {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({
+                    productId: id,
+                    quantity: quantity
+                })
+            })
+                .then(res => res.text())
+                .then(msg => {
+                    alert(msg);
+                    location.reload();
+                });
+        }
+
+        function checkout(){
+
+    if(cart.length === 0){
+        alert("Cart is empty");
+        return;
+    }
+
+    fetch("/checkout", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ items: cart })
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert(msg);
+
+        cart = [];       
+        localStorage.removeItem("cart");
+        renderCart();     
+        location.reload(); 
+    });
+
+}
+function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("cart");
+
+    window.location.href = "/login.html";
+}
+function registerStaff() {
+    const name = document.getElementById("staffName").value;
+    const email = document.getElementById("staffEmail").value;
+    const password = document.getElementById("staffPassword").value;
+
+    fetch("/register-staff", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+            name,
+            email,
+            password
+        })
+    })
+    .then(res => res.text())
+    .then(msg => {
+    alert(msg);
+        loadStaff();
+    document.getElementById("staffName").value = "";
+    document.getElementById("staffEmail").value = "";
+    document.getElementById("staffPassword").value = "";
+
+    document.getElementById("staffForm").style.display = "none";
+});
+}
+
+function toggleStaffForm() {
+    const form = document.getElementById("staffForm");
+
+    if (form.style.display === "none") {
+        form.style.display = "block";
+    } else {
+        form.style.display = "none";
+    }
+}
+function togglePerformance() {
+    const container = document.getElementById("staffPerfContainer");
+
+    if (container.style.display === "none") {
+        container.style.display = "block";
+        loadStaffPerformance(); // load data when opening
+    } else {
+        container.style.display = "none";
+    }
+}
+function loadStaffPerformance() {
+    fetch("/staff-performance", {
+        headers: authHeaders
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        const table = document.getElementById("staffPerfTable");
+        const body = document.getElementById("staffPerfBody");
+
+        body.innerHTML = ""; // clear old data
+
+        data.forEach(s => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${s.name}</td>
+                <td>${s.email}</td>
+                <td>${s.totalSales}</td>
+                <td>₹${s.totalRevenue}</td>
+            `;
+
+            body.appendChild(tr);
+        });
+
+        table.style.display = "table";
+    });
+}
+
+function toggleStaffList() {
+    const container = document.getElementById("staffListContainer");
+
+    if (container.style.display === "none") {
+        container.style.display = "block";
+        loadStaff(); // call next function
+    } else {
+        container.style.display = "none";
+    }
+}
+function loadStaff() {
+    fetch("/staff", { headers: authHeaders })
+    .then(res => res.json())
+    .then(data => {
+
+        const list = document.getElementById("staffList");
+        list.innerHTML = "";
+
+        data.forEach(s => {
+    const li = document.createElement("li");
+
+    li.innerHTML = `
+    ${s.name} (${s.email})
+
+    <span style="color:${s.isVerified ? 'green' : 'orange'}">
+        ${s.isVerified ? "✔ Verified" : "⏳ Not Verified"}
+    </span>
+
+    ${!s.isVerified ? `<button onclick="resendStaff('${s.email}')">Resend</button>` : ""}
+
+    <br><br>
+
+    <label>
+        Allow Add Product
+        <input
+            type="checkbox"
+            ${s.permissions?.canAddProduct ? "checked" : ""}
+            onchange="togglePermission('${s._id}', this.checked)"
+        >
+    </label>
+
+    <button onclick="removeStaff('${s._id}')">Remove</button>
+`;
+
+    list.appendChild(li);
+});
+    });
+}
+function removeStaff(id) {
+
+    if (!confirm("Remove this staff?")) return;
+
+    fetch("/staff/" + id, {
+        method: "DELETE",
+        headers: authHeaders
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert(msg);
+        loadStaff(); // refresh list
+    });
+}
+
+function togglePermission(id, value) {
+
+    fetch("/staff/permission/" + id, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({
+            canAddProduct: value
+        })
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert(msg);
+    });
+}
+
+function openSalesPage() {
+    window.location.href = "/sales.html";
+}
+function resendStaff(email) {
+    fetch("/resend-verification", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+    })
+    .then(res => res.text())
+    .then(msg => alert(msg));
+}
+
+function showWelcome() {
+    const name = localStorage.getItem("name");
+    const role = localStorage.getItem("role");
+
+    const text = `Welcome ${name} (${role})`;
+
+    document.getElementById("welcomeText").innerText = text;
+}
+
+    </script>
+</body>
+
+</html>

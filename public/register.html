@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Owner Register</title>
+</head>
+<body>
+    <h2>Register Shop Owner</h2>
+
+    <input id="name" placeholder="Name">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <input id="shopId" placeholder="Shop ID">
+    
+    <button onclick="register()">Register</button>
+    <button onclick="goToLogin()">Login</button>
+
+    <script>
+        function register() {
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const shopId = document.getElementById("shopId").value;
+
+            fetch("/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                    shopId
+                })
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert(msg);
+                window.location.href = "/login.html";
+            });
+        }
+
+        function goToLogin() {
+            window.location.href = "/login.html";
+        }
+    </script>
+</body>
+</html>

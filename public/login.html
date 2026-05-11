@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>POS Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+
+<button onclick="goToRegister()">New Owner? Register</button>
+
+<button onclick="resend()">Resend Verification</button>
+   <script>
+function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+        alert("Please enter email and password");
+        return;
+    }
+
+    const btn = document.querySelector("button");
+    btn.disabled = true;
+
+    fetch("/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => {
+        return res.json().then(data => {
+            if (!res.ok) {
+                throw new Error(data.message || "Login failed");
+            }
+            return data;
+        });
+    })
+    .then(data => {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
+        localStorage.setItem("name", data.user.name);
+
+        window.location.href = "/dashboard.html";
+    })
+    .catch(err => {
+        alert(err.message);
+        btn.disabled = false;
+    });
+}
+
+function goToRegister() {
+    window.location.href = "/register.html";
+}
+
+function resend() {
+    const email = document.getElementById("email").value;
+
+    fetch("/resend-verification", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+    })
+    .then(res => res.text())
+    .then(msg => alert(msg));
+}
+</script>
+</body>
+</html>
