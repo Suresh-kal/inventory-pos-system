@@ -6,14 +6,18 @@ const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User");
+const PDFDocument = require("pdfkit");
+const fs=require("fs");
 const authMiddleware = require("./middleware/auth");
 const roleMiddleware = require("./middleware/role");
 const verifyMiddleware = require("./middleware/verify");
+const generateInvoice = require("./utils/generateInvoice");
 const app = express();
 const Product = require("./models/Product");
 const Sale = require("./models/Sale");
 app.use(express.json());
 app.use(express.static("public"));
+app.use("/invoices", express.static("invoices"));
 mongooes
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
@@ -25,8 +29,8 @@ app.get("/", (req, res) => {
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "kalwarsuresh86@gmail.com",
-    pass: "xzwu okvo bphx fgqk"
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -216,12 +220,12 @@ app.post("/register-staff", authMiddleware, roleMiddleware("owner"), async (req,
         return res.send("Staff reactivated. Verification email sent.");
     }
 
-    // 🔥 CASE 3: Exists and active
+
     if (existing) {
         return res.send("User already exists");
     }
 
-    // 🔥 CASE 4: New staff
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const token = crypto.randomBytes(32).toString("hex");
 
@@ -269,7 +273,6 @@ app.post("/resend-verification", async (req, res) => {
       return res.send("User already verified");
     }
 
-    // 🔥 generate new token
     const token = crypto.randomBytes(32).toString("hex");
 
     user.verificationToken = token;
@@ -323,7 +326,6 @@ app.post(
       const data = req.body;
       data.shopId = req.user.shopId;
 
-      // normalize
       data.model = data.model.toLowerCase().trim();
       data.category = data.category.toLowerCase().trim();
 
@@ -476,7 +478,14 @@ app.post(
     product.stock -= quantity;
     await product.save();
     const total = product.price * quantity;
-
+    const saleItems = [
+  {
+    productName: product.model,
+    quantity: quantity,
+    priceAtSale: product.price,
+    subtotal: total,
+  },
+];
     const sale = new Sale({
       product: product._id,
       productName: product.model,
@@ -488,9 +497,17 @@ app.post(
       createdBy: req.user.userId,
     });
     await sale.save();
+    const user = await User.findById(req.user.userId);
 
-    res.send("Sale recorded susccessfully");
-  },
+    const fileName = generateInvoice(
+  saleItems,
+  total,
+  user
+);
+res.json({
+  message: "Sale recorded successfully",
+  invoice: fileName,
+});  },
 );
 app.get("/sales", authMiddleware, roleMiddleware("owner"), async (req, res) => {
   const sales = await Sale.find({
@@ -654,7 +671,17 @@ app.post(
         createdBy: req.user.userId,
       });
       await sale.save();
-      res.send("Checkout successful");
+      const user = await User.findById(req.user.userId);
+
+const fileName = generateInvoice(
+    saleItems,
+    total,
+    user
+);
+      res.json({
+  message: "Checkout successful",
+  invoice: fileName,
+});
     } catch (err) {
       res.status(500).send(err.message);
     }
@@ -665,7 +692,7 @@ app.get("/staff", authMiddleware, roleMiddleware("owner"), async (req, res) => {
   const staff = await User.find({
     role: "staff",
     shopId: req.user.shopId,
-    isActive: { $eq: true }   // 🔥 strict match
+    isActive: { $eq: true }   
   }).select("-password");
 
   res.json(staff);
