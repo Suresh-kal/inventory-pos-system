@@ -37,7 +37,7 @@ const transporter = nodemailer.createTransport({
 
 app.post("/register", async (req, res) => {
   try {
-    const { name, email, password, shopId } = req.body;
+    const { name, email, password } = req.body;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
@@ -52,6 +52,7 @@ app.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
    const token = crypto.randomBytes(32).toString("hex");
+   const shopId = crypto.randomBytes(8).toString("hex");
 
 const user = new User({
   name,
@@ -67,7 +68,7 @@ const user = new User({
 
     await user.save();
 
-    const link = `https://reliably-vagabond-crock.ngrok-free.dev/verify/${token}`;
+    const link = `${process.env.BASE_URL}/verify/${token}`;
 
 await transporter.sendMail({
   to: email,
