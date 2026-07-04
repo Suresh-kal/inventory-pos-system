@@ -19,6 +19,9 @@ const saleSchema=new mongoose.Schema({
         type:Number
         
     },
+    costAtSale:{
+        type:Number
+},
     items:[
         {
             product:{
@@ -28,6 +31,7 @@ const saleSchema=new mongoose.Schema({
             productName:String,
             category:String,
             quantity:Number,
+            costAtSale:Number,
             priceAtSale:Number,
             subtotal:Number
         }

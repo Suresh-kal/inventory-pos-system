@@ -1,335 +1,356 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
+  <h2>Inventory Dashboard</h2>
+  <h2 id="welcomeText"></h2>
+  <button onclick="logout()">Logout</button>
 
-    <h2>Inventory Dashboard</h2>
-    <h2 id="welcomeText"></h2>
-    <button onclick="logout()">Logout</button>
+  <button id="salesBtn" onclick="openSalesPage()">Sales History</button>
 
-    <button id="salesBtn" onclick="openSalesPage()">Sales History</button>
+  <hr />
+  <div id="revenueOnly">
+    <h3>Today's Revenue: ₹<span id="revenue">0</span></h3>
+    <h3>Today's Cost: ₹<span id="cost">0</span></h3>
+    <h3>Today's Profit: ₹<span id="profit">0</span></h3>
+    <h3>Items Sold: <span id="items">0</span></h3>
+    <h3>Transactions: <span id="transactions">0</span></h3>
+    <h3>Top Product Today: <span id="topProduct">...</span></h3>
+    <h3>Products Sold Today</h3>
+    <hr />
+    <canvas id="salesChart" width="200" height="100"></canvas>
+    <h3>Monthly Revenue</h3>
+    <hr />
+    <canvas id="monthlyChart" width="200" height="100"></canvas>
+  </div>
 
+  <br /><br />
+  <h3>⚠️ Low Stock Products</h3>
+  <ul id="lowStockList"></ul>
+  <hr />
+  <br /><br />
+  <h3>🛒 Cart</h3>
+  <ul id="cartList"></ul>
+  <h4>Total: ₹<span id="cartTotal">0</span></h4>
+  <button onclick="checkout()">Checkout</button>
+  <hr />
+  <div id="addProductSection">
+    <h3>Add Product</h3>
+
+    <input id="model" placeholder="Model" />
+    <input id="costPrice" placeholder="Cost Price" type="number" />
+    <input id="price" placeholder="Selling Price" type="number" />
+    <input id="stock" placeholder="Stock" type="number" />
+    <input id="category" placeholder="Category" />
+    <button onclick="addProduct()">Add🗃️</button>
+
+    <h3>Bulk Add Products</h3>
+
+    <div id="bulkContainer"></div>
+
+    <button onclick="addRow()">Add Row</button>
+    <button onclick="addAllProducts()">Add All</button>
     <hr>
-    <div id="revenueOnly">
-        <h3>Today's Revenue: ₹<span id="revenue">0</span></h3>
-        <h3>Items Sold: <span id="items">0</span></h3>
-        <h3>Transactions: <span id="transactions">0</span></h3>
-        <h3>Top Product Today: <span id="topProduct">...</span></h3>
-        <h3>Products Sold Today</h3>
-        <hr>
-        <canvas id="salesChart" width="200" height="100"></canvas>
-        <h3>Monthly Revenue</h3>
-        <hr>
-        <canvas id="monthlyChart" width="200" height="100"></canvas>
+
+<h3>Upload Excel File</h3>
+
+<input type="file" id="excelFile" accept=".xlsx,.xls">
+<button onclick="uploadExcel()">Upload Excel</button>
+
+<button onclick="downloadTemplate()">Download Template</button>
+<br><br>
+
+<button onclick="exportExcel()">Export Products</button>
+  </div>
+  <br />
+  <hr />
+  <div id="staffDetails">
+    <button onclick="toggleStaffForm()">▼ Register Staff</button>
+
+    <div id="staffForm" style="display: none; margin-top: 10px">
+      <input id="staffName" placeholder="Staff Name" />
+      <input id="staffEmail" placeholder="Staff Email" />
+      <input id="staffPassword" type="password" placeholder="Password" />
+
+      <button onclick="registerStaff()">Create Staff</button>
+    </div>
+    <button onclick="toggleStaffList()">▼ Show Staff</button>
+
+    <div id="staffListContainer" style="display: none; margin-top: 10px">
+      <ul id="staffList"></ul>
     </div>
 
-    <br><br>
-    <h3>⚠️ Low Stock Products</h3>
-    <ul id="lowStockList"></ul>
-    <hr>
-    <br><br>
-    <h3>🛒 Cart</h3>
-    <ul id="cartList"></ul>
-    <h4>Total: ₹<span id="cartTotal">0</span></h4>
-    <button onclick="checkout()">Checkout</button>
-    <hr>
-    <div id="addProductSection">
-        <h3>Add Product</h3>
+    <h3>📊 Staff Performance</h3>
+    <button onclick="togglePerformance()">▼ Show Performance</button>
 
-        <input id="model" placeholder="Model">
-        <input id="price" placeholder="Price" type="number">
-        <input id="stock" placeholder="Stock" type="number">
-        <input id="category" placeholder="Category">
-        <button onclick="addProduct()">Add🗃️</button>
-
-        <h3>Bulk Add Products</h3>
-
-        <div id="bulkContainer"></div>
-
-        <button onclick="addRow()">Add Row</button>
-        <button onclick="addAllProducts()">Add All</button>
-    </div>
-    <br>
-    <hr>
-    <div id="staffDetails">
-        <button onclick="toggleStaffForm()">▼ Register Staff</button>
-
-        <div id="staffForm" style="display: none; margin-top: 10px;">
-            <input id="staffName" placeholder="Staff Name">
-            <input id="staffEmail" placeholder="Staff Email">
-            <input id="staffPassword" type="password" placeholder="Password">
-
-            <button onclick="registerStaff()">Create Staff</button>
-
-        </div>
-        <button onclick="toggleStaffList()">▼ Show Staff</button>
-
-        <div id="staffListContainer" style="display: none; margin-top: 10px;">
-            <ul id="staffList"></ul>
-        </div>
-
-        <h3>📊 Staff Performance</h3>
-        <button onclick="togglePerformance()">▼ Show Performance</button>
-
-        <div id="staffPerfContainer" style="display: none; margin-top:10px;">
-            <table border="1" id="staffPerfTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Total Sales</th>
-                        <th>Total Revenue</th>
-                    </tr>
-                </thead>
-                <tbody id="staffPerfBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <br><br>
-    <input id="search" placeholder="Search product..." oninput="filterProducts()">
-    <table border="1">
+    <div id="staffPerfContainer" style="display: none; margin-top: 10px">
+      <table border="1" id="staffPerfTable">
         <thead>
-            <tr>
-                <th>model</th>
-                <th>category</th>
-                <th>price</th>
-                <th>Stock</th>
-                <th>Added</th>
-                <th>Update</th>
-                <th>Delete</th>
-                <th>sell</th>
-            </tr>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Total Sales</th>
+            <th>Total Revenue</th>
+          </tr>
         </thead>
-        <tbody id="body">
+        <tbody id="staffPerfBody"></tbody>
+      </table>
+    </div>
+  </div>
 
-        </tbody>
-    </table>
-    <script>
-        const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role");
-        window.onload = function () {
-            showWelcome();
-            if (role !== "owner") {
-                document.getElementById("salesBtn").style.display = "none";
+  <br /><br />
+  <input id="search" placeholder="Search product..." oninput="filterProducts()" />
+  <table border="1">
+    <thead>
+      <tr>
+        <th>model</th>
+        <th>category</th>
+        <th>cost</th>
+        <th>price</th>
+        <th>Stock</th>
+        <th>Added</th>
+        <th>Update</th>
+        <th>Delete</th>
+        <th>sell</th>
+      </tr>
+    </thead>
+    <tbody id="body"></tbody>
+  </table>
+  <script>
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    window.onload = function () {
+      showWelcome();
+      if (role !== "owner") {
+        document.getElementById("salesBtn").style.display = "none";
 
-                document.getElementById("revenueOnly").style.display = "none";
+        document.getElementById("revenueOnly").style.display = "none";
 
-                document.getElementById("staffDetails").style.display = "none";
-            }
-        };
+        document.getElementById("staffDetails").style.display = "none";
+      }
+    };
 
-        if (!token) {
-            window.location.href = "/login.html";
+    if (!token) {
+      window.location.href = "/login.html";
+    }
+
+    const authHeaders = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+    fetch("/me", {
+      headers: authHeaders,
+    })
+      .then((res) => res.json())
+      .then((user) => {
+        if (user.role === "owner") {
+          return;
         }
 
-        const authHeaders = {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        };
-        fetch("/me", {
-            headers: authHeaders
-        })
-            .then(res => res.json())
-            .then(user => {
+        if (!user.permissions?.canAddProduct) {
+          document.getElementById("addProductSection").style.display = "none";
+        }
+      });
 
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    fetch("/low-stock", {
+      headers: authHeaders,
+    })
+      .then((res) => res.json())
+      .then((products) => {
+        const list = document.getElementById("lowStockList");
+        if (products.length === 0) {
+          const li = document.createElement("li");
+          li.innerText = "✅ All products well stocked";
+          list.appendChild(li);
+          return;
+        }
+        products.forEach((p) => {
+          const li = document.createElement("li");
+          li.innerText = `${p.model} (${p.stock} left)`;
 
-                if (user.role === "owner") {
-                    return;
-                }
+          list.appendChild(li);
+        });
+      });
+    fetch("/summary", {
+      headers: authHeaders,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        document.getElementById("revenue").innerText = data.todayRevenue;
+        document.getElementById("cost").innerText = data.todayCost;
+        document.getElementById("profit").innerText = data.todayProfit;
+        document.getElementById("items").innerText = data.itemsSold;
+        document.getElementById("transactions").innerText = data.transactions;
+        document.getElementById("topProduct").innerText = data.topProduct;
 
+        const labels = Object.keys(data.productCount);
+        const values = Object.values(data.productCount);
 
-                if (!user.permissions?.canAddProduct) {
-                    document.getElementById("addProductSection").style.display = "none";
-                }
-            });
+        const ctx = document.getElementById("salesChart");
 
-        let cart = JSON.parse(localStorage.getItem("cart")) || [];
-        fetch("/low-stock", {
-            headers: authHeaders
-        })
-            .then(res => res.json())
-            .then(products => {
-                const list = document.getElementById("lowStockList");
-                if (products.length === 0) {
-                    const li = document.createElement("li");
-                    li.innerText = "✅ All products well stocked";
-                    list.appendChild(li);
-                    return;
-                }
-                products.forEach(p => {
-                    const li = document.createElement("li");
-                    li.innerText = `${p.model} (${p.stock} left)`;
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Products Sold Today",
+                data: values,
+                backgroundColor: [
+                  "#4CAF50",
+                  "#2196F3",
+                  "#FF9800",
+                  "#9C27B0",
+                  "#F44336",
+                ],
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      });
 
-                    list.appendChild(li);
-                })
-            });
-        fetch("/summary", {
-            headers: authHeaders
-        })
-            .then(res => res.json())
-            .then(data => {
+    fetch("/monthly-revenue", {
+      headers: authHeaders,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const labels = Object.keys(data);
+        const values = Object.values(data);
 
+        const ctx = document.getElementById("monthlyChart");
 
-                document.getElementById("revenue").innerText = data.todayRevenue;
-                document.getElementById("items").innerText = data.itemsSold;
-                document.getElementById("transactions").innerText = data.transactions;
-                document.getElementById("topProduct").innerText = data.topProduct;
+        new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Revenue This Month",
+                data: values,
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      });
 
-
-                const labels = Object.keys(data.productCount);
-                const values = Object.values(data.productCount);
-
-                const ctx = document.getElementById("salesChart");
-
-                new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Products Sold Today",
-                            data: values,
-                            backgroundColor: [
-                                "#4CAF50",
-                                "#2196F3",
-                                "#FF9800",
-                                "#9C27B0",
-                                "#F44336"
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-
-            });
-
-        fetch("/monthly-revenue", {
-            headers: authHeaders
-        })
-            .then(res => res.json())
-            .then(data => {
-                const labels = Object.keys(data);
-                const values = Object.values(data);
-
-                const ctx = document.getElementById("monthlyChart");
-
-                new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Revenue This Month",
-                            data: values,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                })
-            })
-
-        let allProducts = [];
-        fetch("/products", {
-            headers: authHeaders
-        })
-            .then(res => res.json())
-            .then(products => {
-                allProducts = products;
-                products.forEach(p => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
+    let allProducts = [];
+    fetch("/products", {
+      headers: authHeaders,
+    })
+      .then((res) => res.json())
+      .then((products) => {
+        allProducts = products;
+        products.forEach((p) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
                 <td>${p.model}</td>
                 <td>${p.category || "-"}</td>
-                <td>${p.price}</td>
+                <td>₹${p.costPrice || 0}</td>
+                <td>₹${p.price}</td>
                 <td>
-    ${p.stock == 0 ? "OUT OF STOCK" : (p.stock <= 5 ? "⚠️ " + p.stock : p.stock)}
+    ${p.stock == 0 ? "OUT OF STOCK" : p.stock <= 5 ? "⚠️ " + p.stock : p.stock}
 </td>
-                <td>${new Date(p.createdAt).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    })}</td>
-               <td><button onclick="updateStock('${p._id}')">Update</button></td>
+                <td>${new Date(p.createdAt).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })}</td>
+               <td><button onclick="updateProduct('${p._id}')">Update</button></td>
                <td><button onclick="deleteProduct('${p._id}')">Delete</button></td>
                <td><button onclick="sellProduct('${p._id}')">Sell</button></td>
                <td><button onclick="addToCart('${p._id}')">ADD TO CART</button></td>
                 `;
-                    document.getElementById("body").appendChild(tr);
-                });
-                cart = cart.filter(item =>
-                    allProducts.some(p => p._id === item.productId)
-                );
+          document.getElementById("body").appendChild(tr);
+        });
+        cart = cart.filter((item) =>
+          allProducts.some((p) => p._id === item.productId),
+        );
 
-                localStorage.setItem("cart", JSON.stringify(cart));
-                renderCart();
-            })
-        function updateStock(id) {
-            const val = prompt("Enter new stock:");
-            if (val === null || val === "") return;
-            fetch("/products/" + id, {
-                method: "PUT",
-                headers: authHeaders,
-                body: JSON.stringify({ stock: val })
-            })
-                .then(() => location.reload());
-        }
+        localStorage.setItem("cart", JSON.stringify(cart));
+        renderCart();
+      });
+    function updateProduct(id) {
 
-        function addToCart(id) {
-            const existing = cart.find(item => item.productId === id);
-            if (existing) {
-                existing.quantity += 1;
-            } else {
-                cart.push({ productId: id, quantity: 1 });
-            }
+      const product = allProducts.find(p => p._id === id);
 
-            localStorage.setItem("cart", JSON.stringify(cart));
-            renderCart();
-        }
-        function renderCart() {
+      const costPrice = prompt("Enter cost price:", product.costPrice || 0);
+      if (costPrice === null) return;
 
-            const list = document.getElementById("cartList");
-            list.innerHTML = "";
+      const price = prompt("Enter selling price:", product.price);
+      if (price === null) return;
 
-            let total = 0;
+      const stock = prompt("Enter stock:", product.stock);
+      if (stock === null) return;
 
-            cart.forEach(item => {
-                const product = allProducts.find(p => p._id === item.productId);
+      fetch("/products/" + id, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({
+          costPrice,
+          price,
+          stock
+        })
+      })
+        .then(() => location.reload());
+    }
+    function addToCart(id) {
+      const existing = cart.find((item) => item.productId === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ productId: id, quantity: 1 });
+      }
 
-                if (!product) return;
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+    }
+    function renderCart() {
+      const list = document.getElementById("cartList");
+      list.innerHTML = "";
 
-                const subtotal = product.price * item.quantity;
+      let total = 0;
 
-            });
+      cart.forEach((item) => {
+        const product = allProducts.find((p) => p._id === item.productId);
 
-            cart.forEach(item => {
+        if (!product) return;
 
-                const product = allProducts.find(p => p._id === item.productId);
+        const subtotal = product.price * item.quantity;
+      });
 
-                const subtotal = product.price * item.quantity;
-                total += subtotal;
+      cart.forEach((item) => {
+        const product = allProducts.find((p) => p._id === item.productId);
 
-                const li = document.createElement("li");
+        const subtotal = product.price * item.quantity;
+        total += subtotal;
 
-                li.innerHTML = `
+        const li = document.createElement("li");
+
+        li.innerHTML = `
         ${product.model}
         <button onclick="decreaseQty('${item.productId}')">-</button>
         ${item.quantity}
@@ -340,332 +361,314 @@
         <button onclick="removeItem('${item.productId}')">Remove</button>
         `;
 
-                list.appendChild(li);
+        list.appendChild(li);
+      });
 
-            });
+      document.getElementById("cartTotal").innerText = total;
+    }
+    function increaseQty(id) {
+      const item = cart.find((i) => i.productId === id);
+      if (item) {
+        item.quantity += 1;
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+    }
+    function decreaseQty(id) {
+      const item = cart.find((i) => i.productId === id);
 
-            document.getElementById("cartTotal").innerText = total;
+      if (item) {
+        item.quantity -= 1;
+
+        if (item.quantity <= 0) {
+          removeItem(id);
+          return;
         }
-        function increaseQty(id) {
-            const item = cart.find(i => i.productId === id);
-            if (item) {
-                item.quantity += 1;
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+    }
+    function removeItem(id) {
+      cart = cart.filter((item) => item.productId !== id);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+    }
+
+    function addProduct() {
+      const model = document.getElementById("model").value;
+      const costPrice = document.getElementById("costPrice").value;
+      const price = document.getElementById("price").value;
+      const stock = document.getElementById("stock").value;
+      const category = document.getElementById("category").value;
+
+      fetch("/add-product", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ model, costPrice, price, stock, category }),
+      })
+        .then((res) => {
+          return res.text().then((msg) => {
+            if (!res.ok) {
+              throw new Error(msg);
             }
-            localStorage.setItem("cart", JSON.stringify(cart));
-            renderCart();
-        }
-        function decreaseQty(id) {
-            const item = cart.find(i => i.productId === id);
+            return msg;
+          });
+        })
+        .then((msg) => {
+          alert(msg);
+          location.reload();
+        })
+        .catch((err) => {
+          alert(err.message); // clean message
+        });
+    }
 
-            if (item) {
-                item.quantity -= 1;
+    function addRow() {
+      const container = document.getElementById("bulkContainer");
 
-                if (item.quantity <= 0) {
-                    removeItem(id);
-                    return;
-                }
-            }
-            localStorage.setItem("cart", JSON.stringify(cart));
-            renderCart();
-        }
-        function removeItem(id) {
-            cart = cart.filter(item => item.productId !== id);
-            localStorage.setItem("cart", JSON.stringify(cart));
-            renderCart();
-        }
+      const row = document.createElement("div");
 
-        function addProduct() {
-            const model = document.getElementById("model").value;
-            const price = document.getElementById("price").value;
-            const stock = document.getElementById("stock").value;
-            const category = document.getElementById("category").value;
-
-            fetch("/add-product", {
-                method: "POST",
-                headers: authHeaders,
-                body: JSON.stringify({ model, price, stock, category })
-            })
-                .then(res => {
-                    return res.text().then(msg => {
-                        if (!res.ok) {
-                            throw new Error(msg);
-                        }
-                        return msg;
-                    });
-                })
-                .then(msg => {
-                    alert(msg);
-                    location.reload();
-                })
-                .catch(err => {
-                    alert(err.message); // clean message
-                });
-        }
-
-
-        function addRow() {
-
-            const container = document.getElementById("bulkContainer");
-
-            const row = document.createElement("div");
-
-            row.innerHTML = `
+      row.innerHTML = `
         <input placeholder="Model">
         <input type="number" placeholder="Price">
         <input type="number" placeholder="Stock">
         <input placeholder="Category">
     `;
 
-            container.appendChild(row);
-        }
+      container.appendChild(row);
+    }
 
-        function addAllProducts() {
+    function addAllProducts() {
+      const rows = document.getElementById("bulkContainer").children;
 
-            const rows = document.getElementById("bulkContainer").children;
+      let products = [];
 
-            let products = [];
+      for (let row of rows) {
+        const inputs = row.querySelectorAll("input");
 
-            for (let row of rows) {
+        const model = inputs[0].value;
+        const price = inputs[1].value;
+        const stock = inputs[2].value;
+        const category = inputs[3].value;
 
-                const inputs = row.querySelectorAll("input");
+        if (!model || !price || !stock || !category) continue;
 
-                const model = inputs[0].value;
-                const price = inputs[1].value;
-                const stock = inputs[2].value;
-                const category = inputs[3].value;
+        products.push({ model, price, stock, category });
+      }
 
-                if (!model || !price || !stock || !category) continue;
+      fetch("/add-products", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(products),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          let message = `${data.added} added`;
 
-                products.push({ model, price, stock, category });
-            }
+          if (data.duplicates.length > 0) {
+            message += `\nDuplicates:\n- ` + data.duplicates.join("\n- ");
+          }
 
-            fetch("/add-products", {
-                method: "POST",
-                headers: authHeaders,
-                body: JSON.stringify(products)
-            })
-                .then(res => res.json())
-                .then(data => {
+          alert(message);
 
-                    let message = `${data.added} added`;
+          location.reload();
+        })
+        .catch((err) => {
+          alert("Error: " + err.message);
+        });
+    }
+    function deleteProduct(id) {
+      if (!confirm("Are you sure you want to delete this product?")) return;
+      fetch("/products/" + id, {
+        method: "DELETE",
+        headers: authHeaders,
+      }).then(() => location.reload());
+    }
+    function filterProducts() {
+      const text = document.getElementById("search").value.toLowerCase();
+      const filtered = allProducts.filter((p) =>
+        p.model.toLowerCase().includes(text),
+      );
+      const tbody = document.getElementById("body");
+      tbody.innerHTML = "";
+      filtered.forEach((p) => {
+        const tr = document.createElement("tr");
 
-                    if (data.duplicates.length > 0) {
-                        message += `\nDuplicates:\n- ` + data.duplicates.join("\n- ");
-                    }
-
-                    alert(message);
-
-                    location.reload();
-                })
-                .catch(err => {
-                    alert("Error: " + err.message);
-                });
-        }
-        function deleteProduct(id) {
-            if (!confirm("Are you sure you want to delete this product?")) return;
-            fetch("/products/" + id, {
-                method: "DELETE",
-                headers: authHeaders
-            })
-                .then(() => location.reload());
-        }
-        function filterProducts() {
-            const text = document.getElementById("search").value.toLowerCase();
-            const filtered = allProducts.filter(p =>
-                p.model.toLowerCase().includes(text)
-            );
-            const tbody = document.getElementById("body");
-            tbody.innerHTML = "";
-            filtered.forEach(p => {
-                const tr = document.createElement("tr");
-
-                tr.innerHTML = `
+        tr.innerHTML = `
 <td>${p.model}</td>
 <td>${p.category || "-"}</td>
-<td>${p.price}</td>
+<td>₹${p.costPrice || 0}</td>
+<td>₹${p.price}</td>
 <td>
-${p.stock == 0 ? "OUT OF STOCK" : (p.stock <= 5 ? "⚠️ " + p.stock : p.stock)}
+${p.stock == 0 ? "OUT OF STOCK" : p.stock <= 5 ? "⚠️ " + p.stock : p.stock}
 </td>
-<td>${new Date(p.createdAt).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                })}</td>
-<td><button onclick="updateStock('${p._id}')">Update</button></td>
+<td>${new Date(p.createdAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}</td>
+<td><button onclick="updateProduct('${p._id}')">Update</button></td>
 <td><button onclick="deleteProduct('${p._id}')">Delete</button></td>
 <td><button onclick="sellProduct('${p._id}')">Sell</button></td>
+<td><button onclick="addToCart('${p._id}')">ADD TO CART</button></td>
 `;
 
+        tbody.appendChild(tr);
+      });
+    }
 
-                tbody.appendChild(tr);
-            });
+    function sellProduct(id) {
+      const quantity = prompt("Enter quantity sold:");
 
-        }
+      if (quantity === null || quantity === "") return;
 
-        function sellProduct(id) {
-            const quantity = prompt("Enter quantity sold:");
+      fetch("/sell", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          productId: id,
+          quantity: quantity,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          alert(data.message);
 
-            if (quantity === null || quantity === "") return;
+          window.open("/invoices/" + data.invoice, "_blank");
 
-            fetch("/sell", {
-                method: "POST",
-                headers: authHeaders,
-                body: JSON.stringify({
-                    productId: id,
-                    quantity: quantity
-                })
-            })
-                .then(res => res.json())
-                .then(data => {
+          location.reload();
+        });
+    }
 
-                    alert(data.message);
+    function checkout() {
+      if (cart.length === 0) {
+        alert("Cart is empty");
+        return;
+      }
 
-                    window.open(
-                        "/invoices/" + data.invoice,
-                        "_blank"
-                    );
+      fetch("/checkout", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ items: cart }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          alert(data.message);
 
-                    location.reload();
-                });
-        }
+          window.open("/invoices/" + data.invoice, "_blank");
 
-        function checkout() {
+          cart = [];
+          localStorage.removeItem("cart");
 
-            if (cart.length === 0) {
-                alert("Cart is empty");
-                return;
-            }
+          renderCart();
 
-            fetch("/checkout", {
-                method: "POST",
-                headers: authHeaders,
-                body: JSON.stringify({ items: cart })
-            })
-                .then(res => res.json())
-                .then(data => {
+          location.reload();
+        });
+    }
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("cart");
 
-                    alert(data.message);
+      window.location.href = "/login.html";
+    }
+    function registerStaff() {
+      const name = document.getElementById("staffName").value;
+      const email = document.getElementById("staffEmail").value;
+      const password = document.getElementById("staffPassword").value;
 
-                    window.open(
-                        "/invoices/" + data.invoice,
-                        "_blank"
-                    );
+      fetch("/register-staff", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      })
+        .then((res) => res.text())
+        .then((msg) => {
+          alert(msg);
+          loadStaff();
+          document.getElementById("staffName").value = "";
+          document.getElementById("staffEmail").value = "";
+          document.getElementById("staffPassword").value = "";
 
-                    cart = [];
-                    localStorage.removeItem("cart");
+          document.getElementById("staffForm").style.display = "none";
+        });
+    }
 
-                    renderCart();
+    function toggleStaffForm() {
+      const form = document.getElementById("staffForm");
 
-                    location.reload();
-                });
+      if (form.style.display === "none") {
+        form.style.display = "block";
+      } else {
+        form.style.display = "none";
+      }
+    }
+    function togglePerformance() {
+      const container = document.getElementById("staffPerfContainer");
 
-        }
-        function logout() {
-            localStorage.removeItem("token");
-            localStorage.removeItem("role");
-            localStorage.removeItem("cart");
+      if (container.style.display === "none") {
+        container.style.display = "block";
+        loadStaffPerformance(); // load data when opening
+      } else {
+        container.style.display = "none";
+      }
+    }
+    function loadStaffPerformance() {
+      fetch("/staff-performance", {
+        headers: authHeaders,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const table = document.getElementById("staffPerfTable");
+          const body = document.getElementById("staffPerfBody");
 
-            window.location.href = "/login.html";
-        }
-        function registerStaff() {
-            const name = document.getElementById("staffName").value;
-            const email = document.getElementById("staffEmail").value;
-            const password = document.getElementById("staffPassword").value;
+          body.innerHTML = "";
 
-            fetch("/register-staff", {
-                method: "POST",
-                headers: authHeaders,
-                body: JSON.stringify({
-                    name,
-                    email,
-                    password
-                })
-            })
-                .then(res => res.text())
-                .then(msg => {
-                    alert(msg);
-                    loadStaff();
-                    document.getElementById("staffName").value = "";
-                    document.getElementById("staffEmail").value = "";
-                    document.getElementById("staffPassword").value = "";
+          data.forEach((s) => {
+            const tr = document.createElement("tr");
 
-                    document.getElementById("staffForm").style.display = "none";
-                });
-        }
-
-        function toggleStaffForm() {
-            const form = document.getElementById("staffForm");
-
-            if (form.style.display === "none") {
-                form.style.display = "block";
-            } else {
-                form.style.display = "none";
-            }
-        }
-        function togglePerformance() {
-            const container = document.getElementById("staffPerfContainer");
-
-            if (container.style.display === "none") {
-                container.style.display = "block";
-                loadStaffPerformance(); // load data when opening
-            } else {
-                container.style.display = "none";
-            }
-        }
-        function loadStaffPerformance() {
-            fetch("/staff-performance", {
-                headers: authHeaders
-            })
-                .then(res => res.json())
-                .then(data => {
-
-                    const table = document.getElementById("staffPerfTable");
-                    const body = document.getElementById("staffPerfBody");
-
-                    body.innerHTML = ""; // clear old data
-
-                    data.forEach(s => {
-                        const tr = document.createElement("tr");
-
-                        tr.innerHTML = `
+            tr.innerHTML = `
                 <td>${s.name}</td>
                 <td>${s.email}</td>
                 <td>${s.totalSales}</td>
                 <td>₹${s.totalRevenue}</td>
             `;
 
-                        body.appendChild(tr);
-                    });
+            body.appendChild(tr);
+          });
 
-                    table.style.display = "table";
-                });
-        }
+          table.style.display = "table";
+        });
+    }
 
-        function toggleStaffList() {
-            const container = document.getElementById("staffListContainer");
+    function toggleStaffList() {
+      const container = document.getElementById("staffListContainer");
 
-            if (container.style.display === "none") {
-                container.style.display = "block";
-                loadStaff(); // call next function
-            } else {
-                container.style.display = "none";
-            }
-        }
-        function loadStaff() {
-            fetch("/staff", { headers: authHeaders })
-                .then(res => res.json())
-                .then(data => {
+      if (container.style.display === "none") {
+        container.style.display = "block";
+        loadStaff();
+      } else {
+        container.style.display = "none";
+      }
+    }
+    function loadStaff() {
+      fetch("/staff", { headers: authHeaders })
+        .then((res) => res.json())
+        .then((data) => {
+          const list = document.getElementById("staffList");
+          list.innerHTML = "";
 
-                    const list = document.getElementById("staffList");
-                    list.innerHTML = "";
+          data.forEach((s) => {
+            const li = document.createElement("li");
 
-                    data.forEach(s => {
-                        const li = document.createElement("li");
-
-                        li.innerHTML = `
+            li.innerHTML = `
     ${s.name} (${s.email})
 
-    <span style="color:${s.isVerified ? 'green' : 'orange'}">
+    <span style="color:${s.isVerified ? "green" : "orange"}">
         ${s.isVerified ? "✔ Verified" : "⏳ Not Verified"}
     </span>
 
@@ -685,65 +688,155 @@ ${p.stock == 0 ? "OUT OF STOCK" : (p.stock <= 5 ? "⚠️ " + p.stock : p.stock)
     <button onclick="removeStaff('${s._id}')">Remove</button>
 `;
 
-                        list.appendChild(li);
-                    });
-                });
+            list.appendChild(li);
+          });
+        });
+    }
+    function removeStaff(id) {
+      if (!confirm("Remove this staff?")) return;
+
+      fetch("/staff/" + id, {
+        method: "DELETE",
+        headers: authHeaders,
+      })
+        .then((res) => res.text())
+        .then((msg) => {
+          alert(msg);
+          loadStaff(); // refresh list
+        });
+    }
+
+    function togglePermission(id, value) {
+      fetch("/staff/permission/" + id, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({
+          canAddProduct: value,
+        }),
+      })
+        .then((res) => res.text())
+        .then((msg) => {
+          alert(msg);
+        });
+    }
+
+    function openSalesPage() {
+      window.location.href = "/sales.html";
+    }
+    function resendStaff(email) {
+      fetch("/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.text())
+        .then((msg) => alert(msg));
+    }
+
+    function showWelcome() {
+      const name = localStorage.getItem("name");
+      const role = localStorage.getItem("role");
+
+      const text = `Welcome ${name} (${role})`;
+
+      document.getElementById("welcomeText").innerText = text;
+    }
+
+    function uploadExcel() {
+
+    const fileInput = document.getElementById("excelFile");
+
+    if (!fileInput.files.length) {
+        alert("Select a file first");
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", fileInput.files[0]);
+
+    fetch("/upload-products", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    })
+   .then(res => res.json())
+.then(data => {
+
+    let msg = `${data.added} products imported`;
+
+    if (data.duplicates && data.duplicates.length > 0) {
+        msg += "\n\nDuplicates skipped:\n";
+        msg += data.duplicates.join("\n");
+    }
+
+    if (data.errors && data.errors.length > 0) {
+        msg += "\n\nErrors:\n";
+        msg += data.errors.join("\n");
+    }
+
+    alert(msg);
+
+    location.reload();
+});
+}
+function exportExcel() {
+
+    fetch("/export-products", {
+        headers: {
+            Authorization: `Bearer ${token}`
         }
-        function removeStaff(id) {
+    })
+    .then(res => res.blob())
+    .then(blob => {
 
-            if (!confirm("Remove this staff?")) return;
+        const url = window.URL.createObjectURL(blob);
 
-            fetch("/staff/" + id, {
-                method: "DELETE",
-                headers: authHeaders
-            })
-                .then(res => res.text())
-                .then(msg => {
-                    alert(msg);
-                    loadStaff(); // refresh list
-                });
+        const a = document.createElement("a");
+
+        a.href = url;
+        a.download = "products.xlsx";
+
+        document.body.appendChild(a);
+        a.click();
+
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+    });
+}
+function downloadTemplate() {
+
+    fetch("/download-template", {
+        headers: {
+            Authorization: `Bearer ${token}`
         }
+    })
+    .then(res => res.blob())
+    .then(blob => {
 
-        function togglePermission(id, value) {
+        const url = window.URL.createObjectURL(blob);
 
-            fetch("/staff/permission/" + id, {
-                method: "PUT",
-                headers: authHeaders,
-                body: JSON.stringify({
-                    canAddProduct: value
-                })
-            })
-                .then(res => res.text())
-                .then(msg => {
-                    alert(msg);
-                });
-        }
+        const a = document.createElement("a");
 
-        function openSalesPage() {
-            window.location.href = "/sales.html";
-        }
-        function resendStaff(email) {
-            fetch("/resend-verification", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email })
-            })
-                .then(res => res.text())
-                .then(msg => alert(msg));
-        }
+        a.href = url;
+        a.download = "inventory-template.xlsx";
 
-        function showWelcome() {
-            const name = localStorage.getItem("name");
-            const role = localStorage.getItem("role");
+        document.body.appendChild(a);
 
-            const text = `Welcome ${name} (${role})`;
+        a.click();
 
-            document.getElementById("welcomeText").innerText = text;
-        }
+        a.remove();
 
-    </script>
+        window.URL.revokeObjectURL(url);
+    });
+
+}
+  </script>
 </body>
 
 </html>
